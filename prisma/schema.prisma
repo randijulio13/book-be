@@ -15,6 +15,15 @@ datasource db {
   directUrl = env("POSTGRES_PRISMA_URL") // uses a direct connection
 }
 
+model User {
+  id         Int      @id @default(autoincrement())
+  name       String
+  username   String   @unique
+  password   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
 model Category {
   id         Int      @id @default(autoincrement())
   name       String

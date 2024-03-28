@@ -78,9 +78,8 @@ export const deleteCategory: RequestHandler = async (
       message: "success",
     });
   } catch (err) {
-    console.log(err);
     res.status(400).json({
-      message: "error occured. check log.",
+      message: "server error",
     });
   }
 };
