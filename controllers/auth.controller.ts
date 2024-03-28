@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../lib/prisma";
-import bcrypt from "bcrypt";
+// import bcrypt from "bcrypt";
 import { findUserByUsername } from "../repositories/user.repository";
 import jwt from "jsonwebtoken";
 
@@ -11,8 +11,10 @@ export const register = async (req: Request, res: Response) => {
   if (user) {
     return res.status(400).json({ message: "user already exists" });
   }
-
-  const hashedPass = await bcrypt.hash(password, 10);
+  
+  // bcrypt error when deployed on vercel server
+  // const hashedPass = await bcrypt.hash(password, 10);
+  const hashedPass = password;
 
   await prisma.user.create({
     data: {
@@ -38,7 +40,9 @@ export const login = async (req: Request, res: Response) => {
     });
   }
 
-  const isValid = await bcrypt.compare(password, user?.password);
+  // bcrypt error when deployed on vercel server
+  // const isValid = await bcrypt.compare(password, user?.password);
+  const isValid = password == user?.password;
 
   if (!isValid) {
     return res.status(400).json({
