@@ -13,3 +13,17 @@ export const determineBookThickness = (totalPage: number): string => {
     return THICKNESS.THIN;
   }
 };
+
+export const stringToSlug = (str: string) => {
+  // Convert to lowercase
+  let slug = str.toLowerCase();
+
+  // Remove special characters, replace spaces with hyphens
+  slug = slug.replace(/[^a-z0-9\s-]/g, "");
+  slug = slug.replace(/\s+/g, "-");
+
+  // Remove leading and trailing hyphens
+  slug = slug.replace(/^-+|-+$/g, "");
+
+  return slug;
+};

@@ -5,14 +5,15 @@ import {
   postBook,
   updateBook,
 } from "../controllers/book.controller";
-import { validateBook, validateUpdateBook } from "../validator/book.validator";
-import { uploadBook } from "../uploads/book.upload";
+import multer from "multer";
 
 const router = Router();
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 router.get("/", getBook);
-router.post("/", uploadBook, validateBook, postBook);
-router.patch("/:id", uploadBook, validateUpdateBook, updateBook);
+router.post("/", upload.single("image"), postBook);
+router.patch("/:id", upload.single("image"), updateBook);
 router.delete("/:id", deleteBook);
 
 export default router;

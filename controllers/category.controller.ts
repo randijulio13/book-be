@@ -1,6 +1,5 @@
 import express, { Express, Request, RequestHandler, Response } from "express";
-import prisma from "../prisma";
-import { rmSync } from "fs";
+import prisma from "../lib/prisma";
 
 export const getCategory: RequestHandler = async (
   req: Request,

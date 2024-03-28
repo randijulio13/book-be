@@ -1,10 +1,8 @@
+import prisma from "../lib/prisma";
 import { Request, RequestHandler, Response } from "express";
-import prisma from "../prisma";
-import { determineBookThickness } from "../utils/utils";
-import { validator } from "../validator";
-import path from "path";
-import url from "url";
-import { UPLOAD_PATH } from "../uploads/book.upload";
+import { determineBookThickness, stringToSlug } from "../utils/utils";
+import { postBookValidate } from "../request/book.request";
+import { deleteImage, getPublicIdFromUrl, upload } from "../lib/cloudinary";
 
 export const getBook: RequestHandler = async (req: Request, res: Response) => {
   const books = await prisma.book.findMany();
@@ -16,21 +14,31 @@ export const getBook: RequestHandler = async (req: Request, res: Response) => {
 };
 
 export const postBook: RequestHandler = async (req: Request, res: Response) => {
-  const valid = validator(req);
-  if (!valid.isEmpty()) {
-    return res.status(422).json({ errors: valid.mapped() });
+  const valid = postBookValidate(req.body);
+
+  if (!valid) {
+    return res.status(400).json({ message: "bad request" });
   }
+
+  if (!req.file) return res.json(400).json({ message: "bad request" });
 
   const { title, description, release_year, price, total_pages, category_id } =
     req.body;
 
-  const thickness = determineBookThickness(total_pages);
-
-  const image_url = url.format({
-    protocol: req.protocol,
-    host: req.get("host"),
-    pathname: path.join(UPLOAD_PATH, String(req.file?.filename)),
+  const category = await prisma.category.findUnique({
+    where: {
+      id: Number(category_id),
+    },
   });
+
+  if (!category) {
+    return res.status(400).json({ message: "bad request" });
+  }
+
+  let cloudinaryRes: any = await upload(req.file);
+  const thickness = determineBookThickness(total_pages);
+  let image_url = cloudinaryRes.url;
+  console.log({ image_url });
 
   await prisma.book.create({
     data: {
@@ -51,11 +59,6 @@ export const postBook: RequestHandler = async (req: Request, res: Response) => {
 };
 
 export const updateBook: RequestHandler = async (req, res) => {
-  const errors = validator(req).mapped();
-  if (Object.keys(errors).length > 0) {
-    return res.status(422).json({ errors });
-  }
-
   const { id } = req.params;
   const body = req.body;
 
@@ -104,10 +107,24 @@ export const deleteBook: RequestHandler = async (
   res: Response
 ) => {
   let { id } = req.params;
+  const book = await prisma.book.findUnique({
+    where: {
+      id: Number(id),
+    },
+  });
+
+  if (!book) {
+    return res.status(404).json({
+      message: "data not found",
+    });
+  }
+
+  await deleteImage(String(getPublicIdFromUrl(String(book?.image_url))));
   await prisma.book.delete({
     where: {
       id: Number(id),
     },
   });
+
   res.json({ message: "success" });
 };
