@@ -70,3 +70,21 @@ export const deleteCategory: RequestHandler = async (
     message: "success",
   });
 };
+
+export const getBooksByCategoryId: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
+  const { id } = req.params;
+
+  const books = await prisma.book.findMany({
+    where: {
+      category_id: Number(id),
+    },
+  });
+
+  res.json({
+    message: "success",
+    data: books,
+  });
+};

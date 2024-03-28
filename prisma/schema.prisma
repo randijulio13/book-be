@@ -10,6 +10,22 @@ datasource db {
 model Category {
   id         Int      @id @default(autoincrement())
   name       String
+  books      Book[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model Book {
+  id           Int      @id @default(autoincrement())
+  title        String
+  description  String?
+  image_url    String?
+  release_year Int?
+  price        String?
+  total_pages  Int?
+  thickness    String?
+  category     Category @relation(fields: [category_id], references: [id])
+  category_id  Int
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 }
