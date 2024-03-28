@@ -3,9 +3,24 @@ import { Request, RequestHandler, Response } from "express";
 import { determineBookThickness, stringToSlug } from "../utils/utils";
 import { postBookValidate } from "../request/book.request";
 import { deleteImage, getPublicIdFromUrl, upload } from "../lib/cloudinary";
+import {
+  deleteBookById,
+  findBookById,
+  getBookWithFilter,
+} from "../repositories/book.repository";
+import { getCategoryById } from "../repositories/category.repository";
 
 export const getBook: RequestHandler = async (req: Request, res: Response) => {
-  const books = await prisma.book.findMany();
+  const { title, minYear, maxYear, minPage, maxPage, sortByTitle } = req.query;
+
+  const books = await getBookWithFilter({
+    title,
+    minYear,
+    maxYear,
+    minPage,
+    maxPage,
+    sortByTitle,
+  });
 
   return res.json({
     message: "success",
@@ -25,20 +40,13 @@ export const postBook: RequestHandler = async (req: Request, res: Response) => {
   const { title, description, release_year, price, total_pages, category_id } =
     req.body;
 
-  const category = await prisma.category.findUnique({
-    where: {
-      id: Number(category_id),
-    },
-  });
+  const category = await getCategoryById(Number(category_id));
 
   if (!category) {
     return res.status(400).json({ message: "bad request" });
   }
 
   let cloudinaryRes: any = await upload(req.file);
-  const thickness = determineBookThickness(total_pages);
-  let image_url = cloudinaryRes.url;
-  console.log({ image_url });
 
   await prisma.book.create({
     data: {
@@ -48,8 +56,8 @@ export const postBook: RequestHandler = async (req: Request, res: Response) => {
       price,
       total_pages: Number(total_pages),
       category_id: Number(category_id),
-      thickness,
-      image_url,
+      thickness: determineBookThickness(total_pages),
+      image_url: cloudinaryRes.url,
     },
   });
 
@@ -92,6 +100,16 @@ export const updateBook: RequestHandler = async (req, res) => {
     data.total_pages = Number(data.total_pages);
   }
 
+  const book = await findBookById(Number(id));
+
+  if (req.file) {
+    const imagePublicId = getPublicIdFromUrl(String(book?.image_url));
+    await deleteImage(String(imagePublicId));
+    let cloudinaryRes: any = await upload(req.file);
+
+    data.image_url = cloudinaryRes.url;
+  }
+
   await prisma.book.update({
     where: {
       id: Number(id),
@@ -107,24 +125,17 @@ export const deleteBook: RequestHandler = async (
   res: Response
 ) => {
   let { id } = req.params;
-  const book = await prisma.book.findUnique({
-    where: {
-      id: Number(id),
-    },
-  });
 
+  const book = await findBookById(Number(id));
   if (!book) {
     return res.status(404).json({
       message: "data not found",
     });
   }
 
-  await deleteImage(String(getPublicIdFromUrl(String(book?.image_url))));
-  await prisma.book.delete({
-    where: {
-      id: Number(id),
-    },
-  });
+  const imagePublicId = getPublicIdFromUrl(String(book?.image_url));
+  await deleteImage(String(imagePublicId));
+  await deleteBookById(Number(id));
 
   res.json({ message: "success" });
 };

@@ -1,5 +1,7 @@
-import express, { Express, Request, RequestHandler, Response } from "express";
+import { Request, RequestHandler, Response } from "express";
 import prisma from "../lib/prisma";
+import { getBookWithFilter } from "../repositories/book.repository";
+import { getCategoryById } from "../repositories/category.repository";
 
 export const getCategory: RequestHandler = async (
   req: Request,
@@ -58,16 +60,29 @@ export const deleteCategory: RequestHandler = async (
   res: Response
 ) => {
   const { id } = req.params;
+  try {
+    const category = await getCategoryById(Number(id));
+    if (!category) {
+      return res.status(404).json({
+        message: "data not found",
+      });
+    }
 
-  await prisma.category.delete({
-    where: {
-      id: Number(id),
-    },
-  });
+    await prisma.category.delete({
+      where: {
+        id: Number(id),
+      },
+    });
 
-  res.json({
-    message: "success",
-  });
+    res.json({
+      message: "success",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({
+      message: "error occured. check log.",
+    });
+  }
 };
 
 export const getBooksByCategoryId: RequestHandler = async (
@@ -76,10 +91,16 @@ export const getBooksByCategoryId: RequestHandler = async (
 ) => {
   const { id } = req.params;
 
-  const books = await prisma.book.findMany({
-    where: {
-      category_id: Number(id),
-    },
+  const { title, minYear, maxYear, minPage, maxPage, sortByTitle } = req.query;
+
+  const books = await getBookWithFilter({
+    title,
+    minYear,
+    maxYear,
+    minPage,
+    maxPage,
+    sortByTitle,
+    category_id: Number(id),
   });
 
   res.json({

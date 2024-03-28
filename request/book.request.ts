@@ -9,6 +9,11 @@ interface PostBookRequest {
   category_id: Number;
 }
 
+enum SortBy {
+  asc = "asc",
+  desc = "desc",
+}
+
 export const postBookValidate = async (request: PostBookRequest) => {
   const { title, description, release_year, price, total_pages, category_id } =
     request;

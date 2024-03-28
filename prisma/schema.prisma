@@ -11,8 +11,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("POSTGRES_URL") // uses connection pooling
-  directUrl = env("POSTGRES_URL") // uses a direct connection
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_PRISMA_URL") // uses a direct connection
 }
 
 model Category {
@@ -32,7 +32,7 @@ model Book {
   price        String?
   total_pages  Int?
   thickness    String?
-  category     Category @relation(fields: [category_id], references: [id])
+  category     Category @relation(fields: [category_id], references: [id], onDelete: Restrict)
   category_id  Int
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
