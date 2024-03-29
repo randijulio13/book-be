@@ -7,7 +7,16 @@ export const getCategory: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
-  const category = await prisma.category.findMany();
+  const { name } = req.query;
+
+  const category = await prisma.category.findMany({
+    where: {
+      name: {
+        startsWith: `%${name}%`,
+        mode: "insensitive",
+      },
+    },
+  });
 
   res.json({
     message: "success",
