@@ -9,7 +9,7 @@ export const register = async (req: Request, res: Response) => {
 
   const user = await findUserByUsername(username);
   if (user) {
-    return res.status(400).json({ message: "user already exists" });
+    return res.status(409).json({ message: "user already exists" });
   }
 
   // bcrypt error when deployed on vercel server
