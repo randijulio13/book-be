@@ -11,7 +11,7 @@ import {
 import { getCategoryById } from "../repositories/category.repository";
 
 export const getBook: RequestHandler = async (req: Request, res: Response) => {
-  const { title, minYear, maxYear, minPage, maxPage, sortByTitle } = req.query;
+  const { title, minYear, maxYear, minPage, maxPage, sortByTitle, categoryId } = req.query;
 
   const books = await getBookWithFilter({
     title,
@@ -20,6 +20,7 @@ export const getBook: RequestHandler = async (req: Request, res: Response) => {
     minPage,
     maxPage,
     sortByTitle,
+    categoryId: Number(categoryId),
   });
 
   return res.json({
@@ -32,10 +33,14 @@ export const postBook: RequestHandler = async (req: Request, res: Response) => {
   const valid = postBookValidate(req.body);
 
   if (!valid) {
-    return res.status(400).json({ message: "bad request" });
+    res.status(400).json({ message: "bad request" });
+    return;
   }
 
-  if (!req.file) return res.json(400).json({ message: "bad request" });
+  if (!req.file) {
+    res.status(400).json({ message: "bad request" });
+    return;
+  }
 
   const { title, description, release_year, price, total_pages, category_id } =
     req.body;
@@ -43,7 +48,8 @@ export const postBook: RequestHandler = async (req: Request, res: Response) => {
   const category = await getCategoryById(Number(category_id));
 
   if (!category) {
-    return res.status(400).json({ message: "bad request" });
+    res.status(400).json({ message: "bad request" });
+    return;
   }
 
   let cloudinaryRes: any = await upload(req.file);
@@ -61,7 +67,7 @@ export const postBook: RequestHandler = async (req: Request, res: Response) => {
     },
   });
 
-  res.json({
+  res.status(200).json({
     message: "success",
   });
 };

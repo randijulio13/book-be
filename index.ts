@@ -5,6 +5,7 @@ import categoryRoutes from "./routes/category.router";
 import bookRoutes from "./routes/book.router";
 import authRoutes from "./routes/auth.router";
 import cors from "cors";
+
 dotenv.config();
 
 const app: Express = express();

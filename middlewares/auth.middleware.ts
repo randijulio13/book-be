@@ -8,11 +8,11 @@ interface authRequest extends Request {
 }
 
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.header("token");
+  const accessToken = req.header("accessToken");
   const secret = process.env.JWT_SECRET;
 
   try {
-    const decoded: any = jwt.verify(String(token), String(secret));
+    const decoded: any = jwt.verify(String(accessToken), String(secret));
     const user = await findUserByUsername(decoded.username);
     if (!user) return res.status(400).json({ message: "user not found" });
     res.locals.user = user;

@@ -108,7 +108,7 @@ export const getBooksByCategoryId: RequestHandler = async (
     minPage,
     maxPage,
     sortByTitle,
-    category_id: Number(id),
+    categoryId: Number(id),
   });
 
   res.json({

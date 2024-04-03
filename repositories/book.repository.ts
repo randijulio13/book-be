@@ -8,7 +8,7 @@ export interface BookFilter {
   minPage: any;
   maxPage: any;
   sortByTitle: any;
-  category_id?: number;
+  categoryId?: number;
 }
 
 export const findBookById = async (id: number) => {
@@ -60,12 +60,21 @@ export const getBookWithFilter = async (filter: BookFilter) => {
     where.total_pages.lte = Number(filter.maxPage);
   }
 
+  if (filter.categoryId) {
+    where.category_id = Number(filter.categoryId);
+  }
+
+  console.log(where)
+
   const orderBy: any = {};
   if (filter.sortByTitle) {
     orderBy.title = filter.sortByTitle;
   }
 
   return await prisma.book.findMany({
+    include: {
+      category: true,
+    },
     where,
     orderBy,
   });

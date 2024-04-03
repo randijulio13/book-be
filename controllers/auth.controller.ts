@@ -11,7 +11,7 @@ export const register = async (req: Request, res: Response) => {
   if (user) {
     return res.status(400).json({ message: "user already exists" });
   }
-  
+
   // bcrypt error when deployed on vercel server
   // const hashedPass = await bcrypt.hash(password, 10);
   const hashedPass = password;
@@ -35,7 +35,7 @@ export const login = async (req: Request, res: Response) => {
   const user = await findUserByUsername(username);
 
   if (!user) {
-    return res.status(400).json({
+    return res.status(401).json({
       message: "wrong username or password",
     });
   }
@@ -45,7 +45,7 @@ export const login = async (req: Request, res: Response) => {
   const isValid = password == user?.password;
 
   if (!isValid) {
-    return res.status(400).json({
+    return res.status(401).json({
       message: "wrong username or password",
     });
   }
@@ -54,6 +54,8 @@ export const login = async (req: Request, res: Response) => {
     { name: user.name, username: user.username },
     String(process.env.JWT_SECRET)
   );
+
+  res.cookie("accessToken", token, { httpOnly: true,maxAge:99999999999 });
 
   res.json({
     accessToken: token,
